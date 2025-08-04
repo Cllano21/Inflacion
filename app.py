@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
+import os
 from datos_generados import datos
 
 
@@ -410,6 +411,6 @@ def toggle_sidebar(n_clicks, style):
     else:
         style["display"] = "none"
     return style
-
-if __name__ == "__main__":
-    app.run(debug=True)
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 8050))
+    app.run(host='0.0.0.0', port=port, debug=True)
