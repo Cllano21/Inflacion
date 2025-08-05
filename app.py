@@ -270,7 +270,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
                 html.H4("Escoge Año", style={"margin": "4px 0 2px 0", "color": "white"}),
                 dcc.Dropdown(
                     id="selector-anios",
-                    options=[{"label": str(a), "value": a} for a in sorted(df["Año"].dropna().unique())],
+                    options=[{"label": str(a), "value": a} for a in sorted(df["Año"].unique()) if pd.notna(a)],
                     value=[df["Año"].max()],
                     multi=True,
                     placeholder="Selecciona uno o varios años..."
