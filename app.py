@@ -278,7 +278,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
             ]),
             html.Div([
                 dcc.Graph(id="grafico-lineas")
-            ], style={"width": "90%", "borderRadius": "12px", "overflow": "hidden"})
+            ], style={"width": "90%", "borderRadius": "12px", "overflow": "hidden","height": "350px", "minHeight": "250px"})
         ])
     ])
 ])
@@ -356,10 +356,10 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         font=dict(color="white"),
         height=350,
         xaxis=dict(title="Fecha", color="white", tickfont=dict(color="white")),
-        yaxis=dict(title="Índice General (IPC)", titlefont=dict(color="white"), tickfont=dict(color="white")),
-        yaxis2=dict(title="Variación Anual (%)", titlefont=dict(color="white"), tickfont=dict(color="white"),
-                     overlaying="y", side="right"),
-        legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
+        yaxis=dict(title=dict(text="Índice General (IPC)", font=dict(color="white")), tickfont=dict(color="white")),
+        yaxis2=dict(title=dict(text="Variación Anual (%)", font=dict(color="white")), tickfont=dict(color="white"),
+                overlaying="y", side="right"),
+       legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
         template="plotly_white",
         plot_bgcolor="rgba(255, 255, 255, 0.1)",
         paper_bgcolor="rgba(255, 255, 255, 0.1)"
