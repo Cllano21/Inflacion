@@ -6,11 +6,16 @@ import os
 from datos_generados import datos
 from datetime import datetime
 
-# Renombrar columnas
+# Renombrar columnas y limpiar datos
 df = pd.DataFrame(datos, columns=["Mes", "IPC"])
 df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
 df["Mes"] = pd.to_datetime(df["Mes"], format="%b-%y", errors="coerce")
-df["Año"] = df["Mes"].dt.year
+
+# Eliminar filas con fechas inválidas
+df = df.dropna(subset=['Mes'])
+
+# Convertir año a entero
+df["Año"] = df["Mes"].dt.year.astype(int)
 
 # Calcular variación anual
 df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
@@ -20,9 +25,8 @@ ultimo_valor = df["IPC"].iloc[-1]
 ultima_fecha = df["Mes"].dt.strftime("%b-%Y").iloc[-1]
 ultimo_anual = df["anual"].iloc[-1]
 
-# Obtener años disponibles
-available_years = sorted(df["Año"].unique())
-available_years = [int(y) for y in available_years if not pd.isna(y)]
+# Obtener años disponibles como enteros
+available_years = sorted(df["Año"].unique().tolist())
 
 # App
 app = dash.Dash(__name__)
@@ -272,8 +276,8 @@ app.layout = html.Div(style={
                 html.H4("Escoge Año", style={"margin": "4px 0 2px 0", "color": "white"}),
                 dcc.Dropdown(
                     id="selector-anios",
-                    options=[{"label": str(int(y)), "value": int(y)} for y in available_years],
-                    value=[max(available_years)] if available_years else [],
+                    options=[{"label": str(y), "value": y} for y in available_years],
+                    value=[max(available_years)] if available_years else None,
                     multi=True,
                     placeholder="Selecciona uno o varios años..."
                 )
