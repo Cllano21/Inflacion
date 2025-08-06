@@ -5,8 +5,6 @@ import plotly.graph_objects as go
 import os
 from datos_generados import datos
 
-
-
 # Renombrar columnas
 df = pd.DataFrame(datos, columns=["Mes", "IPC"])
 df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
@@ -24,7 +22,6 @@ ultimo_anual = df["anual"].iloc[-1]
 # App
 app = dash.Dash(__name__)
 app.title = "Dashboard IPC"
-
 
 # Layout
 app.layout = html.Div(style={
@@ -84,7 +81,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
        "display": "flex",
         "flexDirection": "row",
         "flexWrap": "wrap",
-        "gap": "30px",  # Esto ahora será visible
+        "gap": "30px",
         "overflowX": "auto",
         "paddingBottom": "10px"
         }, children=[
@@ -93,24 +90,24 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
         html.Div(style={
             "display": "flex",
             "flexDirection": "column",
-            "height": "120px",  # Toma toda la altura disponible
+            "height": "120px",
             "minHeight": "100px",
             "minWidth": "90px"
         }, children=[
             html.P("Información Junio", style={
                 "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
                 "fontSize": "18px", "textAlign": "center", 
-                "height": "30px",  # Altura fija
+                "height": "30px",
                 "display": "flex", "alignItems": "center", "justifyContent": "center"
             }),
             html.Div(style={
                 "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
                 "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                 "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",  # Ancho completo
+                "width": "100%",
                 "color": "#fff", "textAlign": "center",
                 "display": "flex", "flexDirection": "column", "justifyContent": "center",
-                "flex": "1"  # Expande para ocupar espacio restante
+                "flex": "1"
             }, children=[
                 html.H4("Índice General", style={"margin": "4px 0 2px 0", "fontSize": "16px"}),
                 html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
@@ -128,14 +125,14 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
         }, children=[
             html.P("Información Junio", style={
                 "visibility": "hidden", "fontSize": "18px",
-                "height": "30px",  # Misma altura que otros títulos
+                "height": "30px",
                 "marginBottom": "6px"
             }),
             html.Div(style={
                 "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
                 "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                 "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",  # Ancho completo
+                "width": "100%",
                 "color": "#fff", "textAlign": "center",
                 "display": "flex", "flexDirection": "column", "justifyContent": "center",
                 "flex": "1"
@@ -165,7 +162,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
                 "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
                 "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                 "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",  # Ancho completo
+                "width": "100%",
                 "color": "#fff", "textAlign": "center",
                 "display": "flex", "flexDirection": "column", "justifyContent": "center",
                 "flex": "1"
@@ -193,7 +190,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
                 "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
                 "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                 "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",  # Ancho completo
+                "width": "100%",
                 "color": "#fff", "textAlign": "center",
                 "display": "flex", "flexDirection": "column", "justifyContent": "center",
                 "flex": "1"
@@ -283,54 +280,35 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
     ])
 ])
 
-# Gráfico principal - Callback unificado para Dropdown y nuevas tarjetas
+# Callback unificado corregido para el gráfico
 @app.callback(
     Output("grafico-lineas", "figure"),
-    Output("selector-anios", "value"), # Nuevo Output para el Dropdown
     [Input("selector-anios", "value"),
      Input("card-2006-2016", "n_clicks"),
      Input("card-2017-2021", "n_clicks"),
      Input("card-2022-2025", "n_clicks")],
-    # Usamos prevent_initial_call=True para evitar que se ejecute al inicio
-    # y para asegurar que solo un input dispare el callback de forma significativa.
-    # Alternativamente, se puede manejar la lógica de cuál input disparó.
+    prevent_initial_call=True
 )
 def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17_21, n_clicks_22_25):
     ctx = dash.callback_context
+    anios_a_mostrar = anios_seleccionados_dropdown if anios_seleccionados_dropdown else []
 
-    # Valores por defecto para el gráfico y el dropdown
-    anios_a_mostrar = [df["Año"].max()] if df["Año"].max() else [] # Por defecto el último año
-    dropdown_value = anios_seleccionados_dropdown # Mantener el valor actual del dropdown por defecto
-
-    if not ctx.triggered:
-        # No se ha disparado ningún input, usar la selección inicial del dropdown
-        pass # ya inicializado arriba
-    else:
-        # Identificar qué input disparó el callback
+    # Detectar qué input disparó el callback
+    if ctx.triggered:
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
-
-        if button_id == "selector-anios":
-            anios_a_mostrar = anios_seleccionados_dropdown
-            # Si el dropdown es el que dispara, mantenemos su valor.
-            # Si el usuario vacía el dropdown, anios_a_mostrar se vacía.
-        elif button_id == "card-2006-2016":
+        
+        if button_id == "card-2006-2016":
             anios_a_mostrar = list(range(2006, 2017))
-            dropdown_value = [] # Resetear el dropdown
         elif button_id == "card-2017-2021":
             anios_a_mostrar = list(range(2017, 2022))
-            dropdown_value = [] # Resetear el dropdown
         elif button_id == "card-2022-2025":
             anios_a_mostrar = list(range(2022, 2026))
-            dropdown_value = [] # Resetear el dropdown
 
-    # Asegurarse de que anios_a_mostrar es una lista
-    if not isinstance(anios_a_mostrar, list):
-        anios_a_mostrar = [anios_a_mostrar]
-
-    # Si no hay años seleccionados/determinados, devolver una figura vacía
+    # Si no hay años seleccionados, mostrar el último año por defecto
     if not anios_a_mostrar:
-        return go.Figure(), dropdown_value # También devolver el valor del dropdown
+        anios_a_mostrar = [df["Año"].max()]
 
+    # Filtrar datos y crear gráfico
     df_filtrado = df[df["Año"].isin(anios_a_mostrar)].copy()
     df_filtrado = df_filtrado.sort_values(by="Mes")
 
@@ -351,22 +329,26 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         yaxis="y2",
         line=dict(color="#00FFFF", dash="dash")
     ))
+    
     fig.update_layout(
         title=dict(text="IPC y Variación Anual", font=dict(color="white"), pad=dict(b=0)),
         font=dict(color="white"),
         height=350,
         xaxis=dict(title="Fecha", color="white", tickfont=dict(color="white")),
         yaxis=dict(title=dict(text="Índice General (IPC)", font=dict(color="white")), tickfont=dict(color="white")),
-        yaxis2=dict(title=dict(text="Variación Anual (%)", font=dict(color="white")), tickfont=dict(color="white"),
-                overlaying="y", side="right"),
-       legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
+        yaxis2=dict(
+            title=dict(text="Variación Anual (%)", font=dict(color="white")),
+            tickfont=dict(color="white"),
+            overlaying="y",
+            side="right"
+        ),
+        legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
         template="plotly_white",
         plot_bgcolor="rgba(255, 255, 255, 0.1)",
         paper_bgcolor="rgba(255, 255, 255, 0.1)"
     )
-    return fig, dropdown_value # Devolver la figura y el valor del dropdown
-
-# ... (El resto de los callbacks `actualizar_tarjetas` y `toggle_sidebar` son iguales) ...
+    
+    return fig
 
 # Callback para actualizar tarjetas al hacer clic en el gráfico
 @app.callback(
@@ -411,6 +393,7 @@ def toggle_sidebar(n_clicks, style):
     else:
         style["display"] = "none"
     return style
+
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))
     app.run(host='0.0.0.0', port=port, debug=True)
