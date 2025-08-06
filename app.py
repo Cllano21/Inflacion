@@ -8,25 +8,46 @@ from datetime import datetime
 
 # Renombrar columnas y limpiar datos
 df = pd.DataFrame(datos, columns=["Mes", "IPC"])
-df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
-df["Mes"] = pd.to_datetime(df["Mes"], format="%b-%y", errors="coerce")
 
-# Eliminar filas con fechas inválidas
-df = df.dropna(subset=['Mes'])
+# Verificar si hay datos
+if df.empty:
+    # Crear un DataFrame vacío con la estructura esperada
+    df = pd.DataFrame(columns=["Mes", "IPC", "Año", "anual"])
+    ultimo_valor = 0
+    ultima_fecha = "N/A"
+    ultimo_anual = 0
+    available_years = []
+else:
+    # Convertir IPC a float
+    df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
+    
+    # Convertir fechas
+    df["Mes"] = pd.to_datetime(df["Mes"], format="%b-%y", errors="coerce")
+    
+    # Eliminar filas con fechas inválidas
+    df = df.dropna(subset=['Mes'])
+    
+    if df.empty:
+        # Si después de limpiar está vacío
+        df = pd.DataFrame(columns=["Mes", "IPC", "Año", "anual"])
+        ultimo_valor = 0
+        ultima_fecha = "N/A"
+        ultimo_anual = 0
+        available_years = []
+    else:
+        # Convertir año a entero
+        df["Año"] = df["Mes"].dt.year.astype(int)
 
-# Convertir año a entero
-df["Año"] = df["Mes"].dt.year.astype(int)
+        # Calcular variación anual
+        df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
 
-# Calcular variación anual
-df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
+        # Último valor
+        ultimo_valor = df["IPC"].iloc[-1] if not df.empty else 0
+        ultima_fecha = df["Mes"].dt.strftime("%b-%Y").iloc[-1] if not df.empty else "N/A"
+        ultimo_anual = df["anual"].iloc[-1] if not df.empty and not pd.isna(df["anual"].iloc[-1]) else 0
 
-# Último valor
-ultimo_valor = df["IPC"].iloc[-1]
-ultima_fecha = df["Mes"].dt.strftime("%b-%Y").iloc[-1]
-ultimo_anual = df["anual"].iloc[-1]
-
-# Obtener años disponibles como enteros
-available_years = sorted(df["Año"].unique().tolist())
+        # Obtener años disponibles como enteros
+        available_years = sorted(df["Año"].unique().tolist()) if not df.empty else []
 
 # App
 app = dash.Dash(__name__)
@@ -324,22 +345,23 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     df_filtrado = df_filtrado.sort_values(by="Mes")
 
     fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=df_filtrado["Mes"],
-        y=df_filtrado["IPC"],
-        mode="lines+markers",
-        name="IPC General",
-        yaxis="y1",
-        line=dict(color="#FFDE21")
-    ))
-    fig.add_trace(go.Scatter(
-        x=df_filtrado["Mes"],
-        y=df_filtrado["anual"],
-        mode="lines+markers",
-        name="Variación Anual (%)",
-        yaxis="y2",
-        line=dict(color="#00FFFF", dash="dash")
-    ))
+    if not df_filtrado.empty:
+        fig.add_trace(go.Scatter(
+            x=df_filtrado["Mes"],
+            y=df_filtrado["IPC"],
+            mode="lines+markers",
+            name="IPC General",
+            yaxis="y1",
+            line=dict(color="#FFDE21")
+        ))
+        fig.add_trace(go.Scatter(
+            x=df_filtrado["Mes"],
+            y=df_filtrado["anual"],
+            mode="lines+markers",
+            name="Variación Anual (%)",
+            yaxis="y2",
+            line=dict(color="#00FFFF", dash="dash")
+        ))
     
     fig.update_layout(
         title=dict(text="IPC y Variación Anual", font=dict(color="white"), pad=dict(b=0)),
@@ -370,7 +392,7 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     Input("grafico-lineas", "clickData")
 )
 def actualizar_tarjetas(clickData):
-    if clickData:
+    if clickData and not df.empty:
         fecha_str_click = clickData["points"][0]["x"]
         fecha_dt = pd.to_datetime(fecha_str_click)
         
