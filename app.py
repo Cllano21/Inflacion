@@ -9,45 +9,28 @@ from datetime import datetime
 # Renombrar columnas y limpiar datos
 df = pd.DataFrame(datos, columns=["Mes", "IPC"])
 
-# Verificar si hay datos
-if df.empty:
-    # Crear un DataFrame vacío con la estructura esperada
-    df = pd.DataFrame(columns=["Mes", "IPC", "Año", "anual"])
-    ultimo_valor = 0
-    ultima_fecha = "N/A"
-    ultimo_anual = 0
-    available_years = []
-else:
-    # Convertir IPC a float
-    df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
-    
-    # Convertir fechas
-    df["Mes"] = pd.to_datetime(df["Mes"], format="%b-%y", errors="coerce")
-    
-    # Eliminar filas con fechas inválidas
-    df = df.dropna(subset=['Mes'])
-    
-    if df.empty:
-        # Si después de limpiar está vacío
-        df = pd.DataFrame(columns=["Mes", "IPC", "Año", "anual"])
-        ultimo_valor = 0
-        ultima_fecha = "N/A"
-        ultimo_anual = 0
-        available_years = []
-    else:
-        # Convertir año a entero
-        df["Año"] = df["Mes"].dt.year.astype(int)
+# Convertir IPC a float
+df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
 
-        # Calcular variación anual
-        df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
+# Convertir fechas: ahora usamos el formato que tienen los datos
+df["Mes"] = pd.to_datetime(df["Mes"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
 
-        # Último valor
-        ultimo_valor = df["IPC"].iloc[-1] if not df.empty else 0
-        ultima_fecha = df["Mes"].dt.strftime("%b-%Y").iloc[-1] if not df.empty else "N/A"
-        ultimo_anual = df["anual"].iloc[-1] if not df.empty and not pd.isna(df["anual"].iloc[-1]) else 0
+# Eliminar filas con fechas inválidas
+df = df.dropna(subset=['Mes'])
 
-        # Obtener años disponibles como enteros
-        available_years = sorted(df["Año"].unique().tolist()) if not df.empty else []
+# Extraer el año
+df["Año"] = df["Mes"].dt.year
+
+# Calcular variación anual
+df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
+
+# Último valor
+ultimo_valor = df["IPC"].iloc[-1] if not df.empty else 0
+ultima_fecha = df["Mes"].iloc[-1].strftime("%b-%Y") if not df.empty else "N/A"
+ultimo_anual = df["anual"].iloc[-1] if not df.empty and not pd.isna(df["anual"].iloc[-1]) else 0
+
+# Obtener años disponibles como enteros
+available_years = sorted(df["Año"].unique().tolist()) if not df.empty else []
 
 # App
 app = dash.Dash(__name__)
@@ -124,7 +107,7 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Información Junio", style={
+                html.P("Última Información", style={
                     "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
                     "fontSize": "18px", "textAlign": "center", 
                     "height": "30px",
@@ -153,10 +136,11 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Información Junio", style={
-                    "visibility": "hidden", "fontSize": "18px",
+                html.P("Última Información", style={
+                    "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
+                    "fontSize": "18px", "textAlign": "center", 
                     "height": "30px",
-                    "marginBottom": "6px"
+                    "display": "flex", "alignItems": "center", "justifyContent": "center"
                 }),
                 html.Div(style={
                     "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
