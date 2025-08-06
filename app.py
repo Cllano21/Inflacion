@@ -4,6 +4,7 @@ from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
 import os
 from datos_generados import datos
+from datetime import datetime
 
 # Renombrar columnas
 df = pd.DataFrame(datos, columns=["Mes", "IPC"])
@@ -18,6 +19,10 @@ df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
 ultimo_valor = df["IPC"].iloc[-1]
 ultima_fecha = df["Mes"].dt.strftime("%b-%Y").iloc[-1]
 ultimo_anual = df["anual"].iloc[-1]
+
+# Obtener años disponibles
+available_years = sorted(df["Año"].unique())
+available_years = [int(y) for y in available_years if not pd.isna(y)]
 
 # App
 app = dash.Dash(__name__)
@@ -76,131 +81,131 @@ app.layout = html.Div(style={
     ]),
 
     # Contenido principal
-html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
-    html.Div(style={
-       "display": "flex",
-        "flexDirection": "row",
-        "flexWrap": "wrap",
-        "gap": "30px",
-        "overflowX": "auto",
-        "paddingBottom": "10px"
-        }, children=[
-        
-        # 🔹 Tarjeta 1 - Índice General
+    html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
         html.Div(style={
-            "display": "flex",
-            "flexDirection": "column",
-            "height": "120px",
-            "minHeight": "100px",
-            "minWidth": "90px"
-        }, children=[
-            html.P("Información Junio", style={
-                "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
-                "fontSize": "18px", "textAlign": "center", 
-                "height": "30px",
-                "display": "flex", "alignItems": "center", "justifyContent": "center"
-            }),
+           "display": "flex",
+            "flexDirection": "row",
+            "flexWrap": "wrap",
+            "gap": "30px",
+            "overflowX": "auto",
+            "paddingBottom": "10px"
+            }, children=[
+            
+            # 🔹 Tarjeta 1 - Índice General
             html.Div(style={
-                "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
-                "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
-                "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",
-                "color": "#fff", "textAlign": "center",
-                "display": "flex", "flexDirection": "column", "justifyContent": "center",
-                "flex": "1"
+                "display": "flex",
+                "flexDirection": "column",
+                "height": "120px",
+                "minHeight": "100px",
+                "minWidth": "90px"
             }, children=[
-                html.H4("Índice General", style={"margin": "4px 0 2px 0", "fontSize": "16px"}),
-                html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
-                html.H2(f"{ultimo_valor:.2f}", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
-            ])
-        ]),
-        
-        # 🔹 Tarjeta 2 - Inflación Anual
-        html.Div(style={
-            "display": "flex",
-            "flexDirection": "column",
-            "height": "120px",
-            "minHeight": "100px",
-            "minWidth": "90px"
-        }, children=[
-            html.P("Información Junio", style={
-                "visibility": "hidden", "fontSize": "18px",
-                "height": "30px",
-                "marginBottom": "6px"
-            }),
+                html.P("Información Junio", style={
+                    "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
+                    "fontSize": "18px", "textAlign": "center", 
+                    "height": "30px",
+                    "display": "flex", "alignItems": "center", "justifyContent": "center"
+                }),
+                html.Div(style={
+                    "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
+                    "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
+                    "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
+                    "width": "100%",
+                    "color": "#fff", "textAlign": "center",
+                    "display": "flex", "flexDirection": "column", "justifyContent": "center",
+                    "flex": "1"
+                }, children=[
+                    html.H4("Índice General", style={"margin": "4px 0 2px 0", "fontSize": "16px"}),
+                    html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
+                    html.H2(f"{ultimo_valor:.2f}", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
+                ])
+            ]),
+            
+            # 🔹 Tarjeta 2 - Inflación Anual
             html.Div(style={
-                "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
-                "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
-                "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",
-                "color": "#fff", "textAlign": "center",
-                "display": "flex", "flexDirection": "column", "justifyContent": "center",
-                "flex": "1"
+                "display": "flex",
+                "flexDirection": "column",
+                "height": "120px",
+                "minHeight": "100px",
+                "minWidth": "90px"
             }, children=[
-                html.H4("Inflación Anual", style={"margin": "4px 0", "fontSize": "16px"}),
-                html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
-                html.H2(f"{ultimo_anual:.2f}%", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
+                html.P("Información Junio", style={
+                    "visibility": "hidden", "fontSize": "18px",
+                    "height": "30px",
+                    "marginBottom": "6px"
+                }),
+                html.Div(style={
+                    "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
+                    "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
+                    "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
+                    "width": "100%",
+                    "color": "#fff", "textAlign": "center",
+                    "display": "flex", "flexDirection": "column", "justifyContent": "center",
+                    "flex": "1"
+                }, children=[
+                    html.H4("Inflación Anual", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
+                    html.H2(f"{ultimo_anual:.2f}%", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
+                ])
+            ]),
+            
+            # 🔹 Tarjeta 3 - IPC Seleccionado
+            html.Div(style={
+                "display": "flex",
+                "flexDirection": "column",
+                "height": "120px",
+                "minHeight": "100px",
+                "minWidth": "90px"
+            }, children=[
+                html.P("Información Seleccionada", style={
+                    "fontWeight": "bold", "color": "#fff", "fontSize": "18px",
+                    "textAlign": "center", 
+                    "height": "30px",
+                    "display": "flex", "alignItems": "center", "justifyContent": "center",
+                    "marginBottom": "6px"
+                }),
+                html.Div(id="card-ipc-seleccionado", style={
+                    "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
+                    "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
+                    "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
+                    "width": "100%",
+                    "color": "#fff", "textAlign": "center",
+                    "display": "flex", "flexDirection": "column", "justifyContent": "center",
+                    "flex": "1"
+                }, children=[
+                    html.H4("IPC Seleccionado", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.P(id="fecha-ipc", style={"fontSize": "12px", "margin": "2px 0"}),
+                    html.H2(id="valor-ipc", style={"fontSize": "18px", "margin": "2px 0"})
+                ])
+            ]),
+            
+            # 🔹 Tarjeta 4 - Inflación Anual Seleccionada
+            html.Div(style={
+                "display": "flex",
+                "flexDirection": "column",
+                "height": "120px",
+                "minHeight": "100px",
+                "minWidth": "90px"
+            }, children=[
+                html.P("Información Seleccionada", style={
+                    "visibility": "hidden", "fontSize": "18px",
+                    "height": "30px",
+                    "marginBottom": "6px"
+                }),
+                html.Div(id="card-acumulada", style={
+                    "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
+                    "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
+                    "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
+                    "width": "100%",
+                    "color": "#fff", "textAlign": "center",
+                    "display": "flex", "flexDirection": "column", "justifyContent": "center",
+                    "flex": "1"
+                }, children=[
+                    html.H4("Inflación Anual Seleccionada", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.P(id="fecha-anual", style={"fontSize": "12px", "margin": "2px 0"}),
+                    html.H2(id="anual", style={"fontSize": "18px", "margin": "2px 0"})
+                ])
             ])
         ]),
-        
-        # 🔹 Tarjeta 3 - IPC Seleccionado
-        html.Div(style={
-            "display": "flex",
-            "flexDirection": "column",
-            "height": "120px",
-            "minHeight": "100px",
-            "minWidth": "90px"
-        }, children=[
-            html.P("Información Seleccionada", style={
-                "fontWeight": "bold", "color": "#fff", "fontSize": "18px",
-                "textAlign": "center", 
-                "height": "30px",
-                "display": "flex", "alignItems": "center", "justifyContent": "center",
-                "marginBottom": "6px"
-            }),
-            html.Div(id="card-ipc-seleccionado", style={
-                "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
-                "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
-                "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",
-                "color": "#fff", "textAlign": "center",
-                "display": "flex", "flexDirection": "column", "justifyContent": "center",
-                "flex": "1"
-            }, children=[
-                html.H4("IPC Seleccionado", style={"margin": "4px 0", "fontSize": "16px"}),
-                html.P(id="fecha-ipc", style={"fontSize": "12px", "margin": "2px 0"}),
-                html.H2(id="valor-ipc", style={"fontSize": "18px", "margin": "2px 0"})
-            ])
-        ]),
-        
-        # 🔹 Tarjeta 4 - Inflación Anual Seleccionada
-        html.Div(style={
-            "display": "flex",
-            "flexDirection": "column",
-            "height": "120px",
-            "minHeight": "100px",
-            "minWidth": "90px"
-        }, children=[
-            html.P("Información Seleccionada", style={
-                "visibility": "hidden", "fontSize": "18px",
-                "height": "30px",
-                "marginBottom": "6px"
-            }),
-            html.Div(id="card-acumulada", style={
-                "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
-                "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
-                "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
-                "width": "100%",
-                "color": "#fff", "textAlign": "center",
-                "display": "flex", "flexDirection": "column", "justifyContent": "center",
-                "flex": "1"
-            }, children=[
-                html.H4("Inflación Anual Seleccionada", style={"margin": "4px 0", "fontSize": "16px"}),
-                html.P(id="fecha-anual", style={"fontSize": "12px", "margin": "2px 0"}),
-                html.H2(id="anual", style={"fontSize": "18px", "margin": "2px 0"})
-            ])
-        ])
-    ]),
         # 🔹 NUEVAS TARJETAS DE SELECCIÓN DE AÑOS POR RANGO
         html.Div(style={"display": "flex", "gap": "15px", "marginTop": "10px"}, children=[
             # Tarjeta 2006-2016
@@ -267,8 +272,8 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
                 html.H4("Escoge Año", style={"margin": "4px 0 2px 0", "color": "white"}),
                 dcc.Dropdown(
                     id="selector-anios",
-                    options=[{"label": str(a), "value": a} for a in sorted(df["Año"].unique()) if pd.notna(a)],
-                    value=[df["Año"].max()],
+                    options=[{"label": str(int(y)), "value": int(y)} for y in available_years],
+                    value=[max(available_years)] if available_years else [],
                     multi=True,
                     placeholder="Selecciona uno o varios años..."
                 )
@@ -286,8 +291,7 @@ html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
     [Input("selector-anios", "value"),
      Input("card-2006-2016", "n_clicks"),
      Input("card-2017-2021", "n_clicks"),
-     Input("card-2022-2025", "n_clicks")],
-    prevent_initial_call=True
+     Input("card-2022-2025", "n_clicks")]
 )
 def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17_21, n_clicks_22_25):
     ctx = dash.callback_context
@@ -306,7 +310,10 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
 
     # Si no hay años seleccionados, mostrar el último año por defecto
     if not anios_a_mostrar:
-        anios_a_mostrar = [df["Año"].max()]
+        if available_years:
+            anios_a_mostrar = [max(available_years)]
+        else:
+            anios_a_mostrar = [datetime.now().year]
 
     # Filtrar datos y crear gráfico
     df_filtrado = df[df["Año"].isin(anios_a_mostrar)].copy()
