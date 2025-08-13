@@ -6,35 +6,35 @@ import os
 from datos_generados import datos
 from datetime import datetime
 
-# Renombrar columnas y limpiar datos
-df = pd.DataFrame(datos, columns=["Mes", "IPC"])
+# Rename columns and clean data
+df = pd.DataFrame(datos, columns=["Mes", "CPI"])
 
-# Convertir IPC a float
-df["IPC"] = df["IPC"].astype(str).str.replace(",", ".").astype(float)
+# Convert CPI to float
+df["CPI"] = df["CPI"].astype(str).str.replace(",", ".").astype(float)
 
-# Convertir fechas: ahora usamos el formato que tienen los datos
+# Convert dates: now we use the format the data has
 df["Mes"] = pd.to_datetime(df["Mes"], format="%Y-%m-%d %H:%M:%S", errors="coerce")
 
-# Eliminar filas con fechas inválidas
+# Drop rows with invalid dates
 df = df.dropna(subset=['Mes'])
 
-# Extraer el año
+# Extract the year
 df["Año"] = df["Mes"].dt.year
 
-# Calcular variación anual
-df["anual"] = df["IPC"].div(df["IPC"].shift(12)).subtract(1).multiply(100)
+# Calculate annual change
+df["anual"] = df["CPI"].div(df["CPI"].shift(12)).subtract(1).multiply(100)
 
-# Último valor
-ultimo_valor = df["IPC"].iloc[-1] if not df.empty else 0
+# Last value
+ultimo_valor = df["CPI"].iloc[-1] if not df.empty else 0
 ultima_fecha = df["Mes"].iloc[-1].strftime("%b-%Y") if not df.empty else "N/A"
 ultimo_anual = df["anual"].iloc[-1] if not df.empty and not pd.isna(df["anual"].iloc[-1]) else 0
 
-# Obtener años disponibles como enteros
+# Get available years as integers
 available_years = sorted(df["Año"].unique().tolist()) if not df.empty else []
 
 # App
 app = dash.Dash(__name__)
-app.title = "Dashboard IPC"
+app.title = "CPI Dashboard"
 
 # Layout
 app.layout = html.Div(style={
@@ -60,9 +60,9 @@ app.layout = html.Div(style={
         "fontWeight": "bold",
         "zIndex": "1000",
         "boxShadow": "0 2px 4px rgba(0,0,0,0.1)"
-    }, children=[html.Span("Inflación en Ecuador", style={"margin": "40px"})]),
+    }, children=[html.Span("Inflation in Ecuador", style={"margin": "40px"})]),
 
-    # Botón hamburguesa
+    # Hamburger button
     html.Div(className="hamburger", id="menu-button", n_clicks=0, children=[
         html.Span(), html.Span(), html.Span()
     ]),
@@ -80,15 +80,15 @@ app.layout = html.Div(style={
         "zIndex": "1500",
         "color": "white"
     }, children=[
-        html.H3("Menú"),
+        html.H3("Menu"),
         html.Ul([
-            html.Li("Inicio"),
-            html.Li("Datos"),
-            html.Li("Gráficos")
+            html.Li("Home"),
+            html.Li("Data"),
+            html.Li("Charts")
         ])
     ]),
 
-    # Contenido principal
+    # Main content
     html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
         html.Div(style={
            "display": "flex",
@@ -99,7 +99,7 @@ app.layout = html.Div(style={
             "paddingBottom": "10px"
             }, children=[
             
-            # 🔹 Tarjeta 1 - Índice General
+            # 🔹 Card 1 - General Index
             html.Div(style={
                 "display": "flex",
                 "flexDirection": "column",
@@ -107,7 +107,7 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Última Información", style={
+                html.P("Latest Information", style={
                     "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
                     "fontSize": "18px", "textAlign": "center", 
                     "height": "30px",
@@ -122,13 +122,13 @@ app.layout = html.Div(style={
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
-                    html.H4("Índice General", style={"margin": "4px 0 2px 0", "fontSize": "16px"}),
+                    html.H4("General Index", style={"margin": "4px 0 2px 0", "fontSize": "16px"}),
                     html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
                     html.H2(f"{ultimo_valor:.2f}", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
                 ])
             ]),
             
-            # 🔹 Tarjeta 2 - Inflación Anual
+            # 🔹 Card 2 - Annual Inflation
             html.Div(style={
                 "display": "flex",
                 "flexDirection": "column",
@@ -136,7 +136,7 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Última Información", style={
+                html.P("Latest Information", style={
                     "fontWeight": "bold", "color": "#fff", "marginBottom": "6px",
                     "fontSize": "18px", "textAlign": "center", 
                     "height": "30px",
@@ -151,13 +151,13 @@ app.layout = html.Div(style={
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
-                    html.H4("Inflación Anual", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.H4("Annual Inflation", style={"margin": "4px 0", "fontSize": "16px"}),
                     html.P(ultima_fecha, style={"fontSize": "14px", "margin": "2px 0"}),
                     html.H2(f"{ultimo_anual:.2f}%", style={"color": "#FFEE8C", "fontSize": "18px", "margin": "2px 0"})
                 ])
             ]),
             
-            # 🔹 Tarjeta 3 - IPC Seleccionado
+            # 🔹 Card 3 - Selected CPI
             html.Div(style={
                 "display": "flex",
                 "flexDirection": "column",
@@ -165,14 +165,14 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Información Seleccionada", style={
+                html.P("Selected Information", style={
                     "fontWeight": "bold", "color": "#fff", "fontSize": "18px",
                     "textAlign": "center", 
                     "height": "30px",
                     "display": "flex", "alignItems": "center", "justifyContent": "center",
                     "marginBottom": "6px"
                 }),
-                html.Div(id="card-ipc-seleccionado", style={
+                html.Div(id="card-CPI-seleccionado", style={
                     "background": "rgba(255, 255, 255, 0.1)", "padding": "10px",
                     "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                     "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
@@ -181,13 +181,13 @@ app.layout = html.Div(style={
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
-                    html.H4("IPC Seleccionado", style={"margin": "4px 0", "fontSize": "16px"}),
-                    html.P(id="fecha-ipc", style={"fontSize": "12px", "margin": "2px 0"}),
-                    html.H2(id="valor-ipc", style={"fontSize": "18px", "margin": "2px 0"})
+                    html.H4("Selected CPI", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.P(id="fecha-CPI", style={"fontSize": "12px", "margin": "2px 0"}),
+                    html.H2(id="valor-CPI", style={"fontSize": "18px", "margin": "2px 0"})
                 ])
             ]),
             
-            # 🔹 Tarjeta 4 - Inflación Anual Seleccionada
+            # 🔹 Card 4 - Selected Annual Inflation
             html.Div(style={
                 "display": "flex",
                 "flexDirection": "column",
@@ -195,7 +195,7 @@ app.layout = html.Div(style={
                 "minHeight": "100px",
                 "minWidth": "90px"
             }, children=[
-                html.P("Información Seleccionada", style={
+                html.P("Selected Information", style={
                     "visibility": "hidden", "fontSize": "18px",
                     "height": "30px",
                     "marginBottom": "6px"
@@ -209,15 +209,15 @@ app.layout = html.Div(style={
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
-                    html.H4("Inflación Anual Seleccionada", style={"margin": "4px 0", "fontSize": "16px"}),
+                    html.H4("Selected Annual Inflation", style={"margin": "4px 0", "fontSize": "16px"}),
                     html.P(id="fecha-anual", style={"fontSize": "12px", "margin": "2px 0"}),
                     html.H2(id="anual", style={"fontSize": "18px", "margin": "2px 0"})
                 ])
             ])
         ]),
-        # 🔹 NUEVAS TARJETAS DE SELECCIÓN DE AÑOS POR RANGO
+        # 🔹 NEW YEAR RANGE SELECTION CARDS
         html.Div(style={"display": "flex", "gap": "15px", "marginTop": "10px"}, children=[
-            # Tarjeta 2006-2016
+            # Card 2006-2016
             html.Div(id="card-2006-2016", n_clicks=0, style={
                 "background": "rgba(255, 255, 255, 0.1)",
                 "padding": "3px",
@@ -232,10 +232,10 @@ app.layout = html.Div(style={
                 "cursor": "pointer"
             }, children=[
                 html.H4("2006-2016", style={"margin": "4px 0 2px 0"}),
-                html.P("Rango de Años", style={"fontSize": "14px", "margin": "2px 0"}),
-                html.H2("Década 1", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
+                html.P("Year Range", style={"fontSize": "14px", "margin": "2px 0"}),
+                html.H2("Decade 1", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
             ]),
-            # Tarjeta 2017-2021
+            # Card 2017-2021
             html.Div(id="card-2017-2021", n_clicks=0, style={
                 "background": "rgba(255, 255, 255, 0.1)",
                 "padding": "3px",
@@ -250,10 +250,10 @@ app.layout = html.Div(style={
                 "cursor": "pointer"
             }, children=[
                 html.H4("2017-2021", style={"margin": "4px 0 2px 0"}),
-                html.P("Rango de Años", style={"fontSize": "14px", "margin": "2px 0"}),
-                html.H2("Quinquenio", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
+                html.P("Year Range", style={"fontSize": "14px", "margin": "2px 0"}),
+                html.H2("Five-Year Period", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
             ]),
-            # Tarjeta 2022-2025
+            # Card 2022-2025
             html.Div(id="card-2022-2025", n_clicks=0, style={
                 "background": "rgba(255, 255, 255, 0.1)",
                 "padding": "3px",
@@ -268,23 +268,23 @@ app.layout = html.Div(style={
                 "cursor": "pointer"
             }, children=[
                 html.H4("2022-2025", style={"margin": "4px 0 2px 0"}),
-                html.P("Rango de Años", style={"fontSize": "14px", "margin": "2px 0"}),
-                html.H2("Actualidad", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
+                html.P("Year Range", style={"fontSize": "14px", "margin": "2px 0"}),
+                html.H2("Present", style={"color": "#FFEE8C", "margin": "2px 0", "fontSize": "18px"})
             ]),
         ]),
 
-        # 🔹 TARJETAS DE IPC Y VARIACIÓN ACUMULADA (EXISTENTES)
+        # 🔹 CPI AND ACCUMULATED CHANGE CARDS (EXISTING)
     
-       # Dropdown + gráfico
+        # Dropdown + chart
         html.Div(style={"display": "flex", "gap": "10px", "marginTop": "20px"}, children=[
             html.Div(style={"width": "200px"}, children=[
-                html.H4("Escoge Año", style={"margin": "4px 0 2px 0", "color": "white"}),
+                html.H4("Select Year", style={"margin": "4px 0 2px 0", "color": "white"}),
                 dcc.Dropdown(
                     id="selector-anios",
                     options=[{"label": str(y), "value": y} for y in available_years],
                     value=[max(available_years)] if available_years else None,
                     multi=True,
-                    placeholder="Selecciona uno o varios años..."
+                    placeholder="Select one or more years..."
                 )
             ]),
             html.Div([
@@ -294,7 +294,7 @@ app.layout = html.Div(style={
     ])
 ])
 
-# Callback unificado corregido para el gráfico
+# Corrected unified callback for the chart
 @app.callback(
     Output("grafico-lineas", "figure"),
     [Input("selector-anios", "value"),
@@ -306,7 +306,7 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     ctx = dash.callback_context
     anios_a_mostrar = anios_seleccionados_dropdown if anios_seleccionados_dropdown else []
 
-    # Detectar qué input disparó el callback
+    # Detect which input triggered the callback
     if ctx.triggered:
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
         
@@ -317,14 +317,14 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         elif button_id == "card-2022-2025":
             anios_a_mostrar = list(range(2022, 2026))
 
-    # Si no hay años seleccionados, mostrar el último año por defecto
+    # If no years are selected, show the last year by default
     if not anios_a_mostrar:
         if available_years:
             anios_a_mostrar = [max(available_years)]
         else:
             anios_a_mostrar = [datetime.now().year]
 
-    # Filtrar datos y crear gráfico
+    # Filter data and create chart
     df_filtrado = df[df["Año"].isin(anios_a_mostrar)].copy()
     df_filtrado = df_filtrado.sort_values(by="Mes")
 
@@ -332,9 +332,9 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     if not df_filtrado.empty:
         fig.add_trace(go.Scatter(
             x=df_filtrado["Mes"],
-            y=df_filtrado["IPC"],
+            y=df_filtrado["CPI"],
             mode="lines+markers",
-            name="IPC General",
+            name="General CPI",
             yaxis="y1",
             line=dict(color="#FFDE21")
         ))
@@ -342,19 +342,19 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
             x=df_filtrado["Mes"],
             y=df_filtrado["anual"],
             mode="lines+markers",
-            name="Variación Anual (%)",
+            name="Annual Change (%)",
             yaxis="y2",
             line=dict(color="#00FFFF", dash="dash")
         ))
     
     fig.update_layout(
-        title=dict(text="IPC y Variación Anual", font=dict(color="white"), pad=dict(b=0)),
+        title=dict(text="CPI and Annual Change", font=dict(color="white"), pad=dict(b=0)),
         font=dict(color="white"),
         height=350,
-        xaxis=dict(title="Fecha", color="white", tickfont=dict(color="white")),
-        yaxis=dict(title=dict(text="Índice General (IPC)", font=dict(color="white")), tickfont=dict(color="white")),
+        xaxis=dict(title="Date", color="white", tickfont=dict(color="white")),
+        yaxis=dict(title=dict(text="General Index (CPI)", font=dict(color="white")), tickfont=dict(color="white")),
         yaxis2=dict(
-            title=dict(text="Variación Anual (%)", font=dict(color="white")),
+            title=dict(text="Annual Change (%)", font=dict(color="white")),
             tickfont=dict(color="white"),
             overlaying="y",
             side="right"
@@ -367,10 +367,10 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     
     return fig
 
-# Callback para actualizar tarjetas al hacer clic en el gráfico
+# Callback to update cards on chart click
 @app.callback(
-    [Output("fecha-ipc", "children"),
-     Output("valor-ipc", "children"),
+    [Output("fecha-CPI", "children"),
+     Output("valor-CPI", "children"),
      Output("fecha-anual", "children"),
      Output("anual", "children")],
     Input("grafico-lineas", "clickData")
@@ -384,16 +384,16 @@ def actualizar_tarjetas(clickData):
         fila_seleccionada = df.iloc[idx_cercano]
 
         fecha_display = fila_seleccionada["Mes"].strftime("%b-%Y")
-        ipc_actual = fila_seleccionada["IPC"]
+        CPI_actual = fila_seleccionada["CPI"]
         anual_actual = fila_seleccionada["anual"]
 
         return (
             fecha_display,
-            f"{ipc_actual:.2f}",
+            f"{CPI_actual:.2f}",
             fecha_display,
-            f"{anual_actual:.2f}%" if pd.notna(anual_actual) else "No disponible"
+            f"{anual_actual:.2f}%" if pd.notna(anual_actual) else "Not available"
         )
-    return "", "Seleccione punto", "", "Seleccione punto"
+    return "", "Select a point", "", "Select a point"
 
 # Sidebar toggle
 @app.callback(
