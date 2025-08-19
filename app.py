@@ -44,7 +44,8 @@ app.layout = html.Div(style={
     "background": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
     "margin": "0",
     "padding": "0",
-    "overflow": "hidden"
+    "overflow": "hidden",
+    "position": "relative"  # Added for sidebar positioning
 }, children=[
 
     # Navbar
@@ -65,31 +66,61 @@ app.layout = html.Div(style={
     # Hamburger button
     html.Div(className="hamburger", id="menu-button", n_clicks=0, children=[
         html.Span(), html.Span(), html.Span()
-    ]),
-
-    # Sidebar
-    html.Div(id="sidebar", style={
+    ], style={
+        "position": "fixed",
+        "top": "15px",
+        "left": "15px",
+        "zIndex": "1600",
+        "cursor": "pointer",
+        "width": "30px",
+        "height": "22px",
+    }),
+    
+    # Overlay for closing menu
+    html.Div(id="overlay", style={
         "position": "fixed",
         "top": "0",
         "left": "0",
+        "width": "100%",
+        "height": "100%",
+        "background": "rgba(0,0,0,0.5)",
+        "zIndex": "1400",
+        "display": "none",
+        "transition": "opacity 0.3s ease",
+        "opacity": "0"
+    }),
+
+    # Sidebar with smooth transition
+    html.Div(id="sidebar", style={
+        "position": "fixed",
+        "top": "0",
+        "left": "-250px",  # Start off-screen
         "height": "100vh",
         "width": "250px",
         "backgroundColor": "#1e3a8a",
         "padding": "20px",
-        "display": "none",
         "zIndex": "1500",
-        "color": "white"
+        "color": "white",
+        "transition": "left 0.3s ease",
+        "overflowY": "auto",
+        "boxShadow": "2px 0 5px rgba(0,0,0,0.2)"
     }, children=[
-        html.H3("Menu"),
-        html.Ul([
-            html.Li("Home"),
-            html.Li("Data"),
-            html.Li("Charts")
-        ])
+        html.H3("Menu", style={"marginTop": "20px"}),
+        html.Ul(style={"listStyleType": "none", "padding": "0"}, children=[
+            html.Li(html.A("Home", href="#", style={"color": "white", "textDecoration": "none", "display": "block", "padding": "10px 0"})),
+            html.Li(html.A("Data", href="#", style={"color": "white", "textDecoration": "none", "display": "block", "padding": "10px 0"})),
+            html.Li(html.A("Charts", href="#", style={"color": "white", "textDecoration": "none", "display": "block", "padding": "10px 0"}))
+        ]),
+        html.Div(style={"position": "absolute", "top": "15px", "right": "15px", "cursor": "pointer"}, 
+                 id="close-menu", children="✕")
     ]),
 
-    # Main content
-    html.Div(style={"padding": "40px 20px 0px 20px" }, children=[
+    # Main content with shift effect
+    html.Div(id="main-content", style={
+        "padding": "40px 20px 0px 20px",
+        "transition": "transform 0.3s ease",
+        "transform": "translateX(0)"
+    }, children=[
         html.Div(style={
            "display": "flex",
             "flexDirection": "row",
@@ -294,6 +325,54 @@ app.layout = html.Div(style={
     ])
 ])
 
+# Callback for menu toggle
+@app.callback(
+    [Output("sidebar", "style"),
+     Output("overlay", "style"),
+     Output("main-content", "style")],
+    [Input("menu-button", "n_clicks"),
+     Input("close-menu", "n_clicks"),
+     Input("overlay", "n_clicks")],
+    [State("sidebar", "style"),
+     State("overlay", "style"),
+     State("main-content", "style")]
+)
+def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overlay_style, content_style):
+    ctx = dash.callback_context
+    if not ctx.triggered:
+        return sidebar_style, overlay_style, content_style
+        
+    trigger_id = ctx.triggered[0]["prop_id"].split(".")[0]
+    
+    # If menu button is clicked
+    if trigger_id == "menu-button":
+        # Toggle menu open
+        if menu_clicks % 2 == 1:
+            sidebar_style["left"] = "0"
+            overlay_style["display"] = "block"
+            overlay_style["opacity"] = "1"
+            content_style["transform"] = "translateX(250px)"
+        else:
+            sidebar_style["left"] = "-250px"
+            overlay_style["opacity"] = "0"
+            content_style["transform"] = "translateX(0)"
+    
+    # If close button or overlay is clicked
+    elif trigger_id in ["close-menu", "overlay"]:
+        sidebar_style["left"] = "-250px"
+        overlay_style["opacity"] = "0"
+        content_style["transform"] = "translateX(0)"
+        
+        # Set menu clicks to even number to sync state
+        return sidebar_style, overlay_style, content_style
+    
+    # After overlay animation completes, hide it completely
+    if overlay_style.get("opacity") == "0":
+        # Add a small delay to allow the transition to complete
+        overlay_style["display"] = "none"
+    
+    return sidebar_style, overlay_style, content_style
+
 # Corrected unified callback for the chart
 @app.callback(
     Output("grafico-lineas", "figure"),
@@ -394,22 +473,6 @@ def actualizar_tarjetas(clickData):
             f"{anual_actual:.2f}%" if pd.notna(anual_actual) else "Not available"
         )
     return "", "Select a point", "", "Select a point"
-
-# Sidebar toggle
-@app.callback(
-    Output("sidebar", "style"),
-    Input("menu-button", "n_clicks"),
-    State("sidebar", "style")
-)
-def toggle_sidebar(n_clicks, style):
-    if n_clicks is None:
-        return style or {"display": "none"}
-    
-    if n_clicks % 2 == 1:
-        style["display"] = "block"
-    else:
-        style["display"] = "none"
-    return style
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))
