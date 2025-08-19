@@ -97,7 +97,7 @@ app.layout = html.Div(style={
         "left": "-250px",  # Start off-screen
         "height": "100vh",
         "width": "250px",
-        "backgroundColor": "#1e3a8a",
+        "backgroundColor": "#7E92D3",
         "padding": "20px",
         "zIndex": "1500",
         "color": "white",
