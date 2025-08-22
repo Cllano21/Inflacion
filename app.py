@@ -103,7 +103,7 @@ app.layout = html.Div(style={
         "left": "-250px",  # Start off-screen
         "height": "100vh",
         "width": "250px",
-        "backgroundColor": "#7E92D3",
+        "backgroundColor": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
         "padding": "20px",
         "zIndex": "1500",
         "color": "white",
