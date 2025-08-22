@@ -25,7 +25,7 @@ df["Año"] = df["Mes"].dt.year
 df["anual"] = df["CPI"].div(df["CPI"].shift(12)).subtract(1).multiply(100)
 
 # Calculate 6-month moving average of annual change
-df["anual_ma_6m"] = df["anual"].rolling(window=6, min_periods=1).mean()
+df["anual_ma_12m"] = df["anual"].rolling(window=12, min_periods=1).mean()
 
 # Last value
 ultimo_valor = df["CPI"].iloc[-1] if not df.empty else 0
@@ -410,8 +410,8 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     df_filtrado = df[df["Año"].isin(anios_a_mostrar)].copy()
     df_filtrado = df_filtrado.sort_values(by="Mes")
     
-    # Calculate 6-month moving average of annual change for filtered data
-    df_filtrado["anual_ma_6m"] = df_filtrado["anual"].rolling(window=6, min_periods=1).mean()
+    # Calculate 12-month moving average of annual change for filtered data
+    df_filtrado["anual_ma_12m"] = df_filtrado["anual"].rolling(window=12, min_periods=1).mean()
 
     fig = go.Figure()
     if not df_filtrado.empty:
@@ -433,15 +433,15 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         ))
         fig.add_trace(go.Scatter(
             x=df_filtrado["Mes"],
-            y=df_filtrado["anual_ma_6m"],
+            y=df_filtrado["anual_ma_12m"],
             mode="lines",
-            name="6-Month MA of Annual Change",
+            name="12-Month MA of Annual Change",
             yaxis="y2",
             line=dict(color="#FF6B6B", width=3)
         ))
     
     fig.update_layout(
-        title=dict(text="CPI, Annual Change, and 6-Month Moving Average", font=dict(color="white"), pad=dict(b=0)),
+        title=dict(text="CPI, Annual Change, and 12-Month Moving Average", font=dict(color="white"), pad=dict(b=0)),
         font=dict(color="white"),
         height=350,
         xaxis=dict(title="Date", color="white", tickfont=dict(color="white")),
