@@ -370,7 +370,7 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
         # Toggle menu open
         if menu_clicks % 2 == 1:
             sidebar_style["left"] = "0"
-            overlay_style["display": "block"
+            overlay_style["display"]: "block"
             overlay_style["opacity"] = "1"
             content_style["transform"] = "translateX(250px)"
         else:
