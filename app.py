@@ -24,7 +24,7 @@ df["Año"] = df["Mes"].dt.year
 # Calculate annual change
 df["anual"] = df["CPI"].div(df["CPI"].shift(12)).subtract(1).multiply(100)
 
-# Calculate 6-month moving average of annual change
+# Calculate 12-month moving average of annual change
 df["anual_ma_12m"] = df["anual"].rolling(window=12, min_periods=1).mean()
 
 # Inflación mensual en %
@@ -214,7 +214,7 @@ app.layout = html.Div(style={
                     "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                     "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
                     "width": "100%",
-                    "color": "#fff", "textAlign": "center",
+                    "color": "white", "textAlign": "center",
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
@@ -242,7 +242,7 @@ app.layout = html.Div(style={
                     "borderRadius": "12px", "boxShadow": "0 10px 15px rgba(0, 0, 0, 0.1)",
                     "backdropFilter": "blur(4px)", "WebkitBackdropFilter": "blur(4px)",
                     "width": "100%",
-                    "color": "#fff", "textAlign": "center",
+                    "color": "white", "textAlign": "center",
                     "display": "flex", "flexDirection": "column", "justifyContent": "center",
                     "flex": "1"
                 }, children=[
@@ -310,10 +310,8 @@ app.layout = html.Div(style={
             ]),
         ]),
 
-        # 🔹 CPI AND ACCUMULATED CHANGE CARDS (EXISTING)
-    
-        # Dropdown + chart
-        html.Div(style={"display": "flex", "gap": "10px", "marginTop": "20px"}, children=[
+        # 🔹 NEW: Series selector dropdown
+        html.Div(style={"display": "flex", "gap": "10px", "marginTop": "20px", "alignItems": "center"}, children=[
             html.Div(style={"width": "200px"}, children=[
                 html.H4("Select Year", style={"margin": "4px 0 2px 0", "color": "white"}),
                 dcc.Dropdown(
@@ -324,10 +322,27 @@ app.layout = html.Div(style={
                     placeholder="Select one or more years..."
                 )
             ]),
-            html.Div([
-                dcc.Graph(id="grafico-lineas")
-            ], style={"width": "90%", "borderRadius": "12px", "overflow": "hidden","height": "350px", "minHeight": "250px"})
-        ])
+            html.Div(style={"width": "300px"}, children=[
+                html.H4("Select Series", style={"margin": "4px 0 2px 0", "color": "white"}),
+                dcc.Dropdown(
+                    id="series-selector",
+                    options=[
+                        {"label": "CPI", "value": "CPI"},
+                        {"label": "Annual Change (%)", "value": "anual"},
+                        {"label": "Monthly Change (%)", "value": "mensual"},
+                        {"label": "12-Month Moving Average", "value": "anual_ma_12m"}
+                    ],
+                    value=["CPI", "anual"],  # Default selected
+                    multi=True,
+                    placeholder="Select series to display..."
+                )
+            ]),
+        ]),
+        
+        # 🔹 Chart
+        html.Div([
+            dcc.Graph(id="grafico-lineas")
+        ], style={"width": "100%", "borderRadius": "12px", "overflow": "hidden", "height": "400px", "marginTop": "20px"})
     ])
 ])
 
@@ -355,7 +370,7 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
         # Toggle menu open
         if menu_clicks % 2 == 1:
             sidebar_style["left"] = "0"
-            overlay_style["display"] = "block"
+            overlay_style["display": "block"
             overlay_style["opacity"] = "1"
             content_style["transform"] = "translateX(250px)"
         else:
@@ -379,15 +394,16 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
     
     return sidebar_style, overlay_style, content_style
 
-# Corrected unified callback for the chart
+# Updated callback for the chart with series selector
 @app.callback(
     Output("grafico-lineas", "figure"),
     [Input("selector-anios", "value"),
+     Input("series-selector", "value"),
      Input("card-2006-2016", "n_clicks"),
      Input("card-2017-2021", "n_clicks"),
      Input("card-2022-2025", "n_clicks")]
 )
-def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17_21, n_clicks_22_25):
+def actualizar_grafico(anios_seleccionados_dropdown, series_seleccionadas, n_clicks_06_16, n_clicks_17_21, n_clicks_22_25):
     ctx = dash.callback_context
     anios_a_mostrar = anios_seleccionados_dropdown if anios_seleccionados_dropdown else []
 
@@ -409,6 +425,10 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         else:
             anios_a_mostrar = [datetime.now().year]
 
+    # If no series are selected, show CPI and annual by default
+    if not series_seleccionadas:
+        series_seleccionadas = ["CPI", "anual"]
+
     # Filter data and create chart
     df_filtrado = df[df["Año"].isin(anios_a_mostrar)].copy()
     df_filtrado = df_filtrado.sort_values(by="Mes")
@@ -417,73 +437,68 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
     df_filtrado["anual_ma_12m"] = df_filtrado["anual"].rolling(window=12, min_periods=1).mean()
 
     fig = go.Figure()
+    
+    # Define colors and styles for each series
+    series_styles = {
+        "CPI": {"color": "#FFDE21", "yaxis": "y1", "dash": "solid", "width": 2},
+        "anual": {"color": "#00FFFF", "yaxis": "y2", "dash": "dash", "width": 2},
+        "mensual": {"color": "#FFA500", "yaxis": "y2", "dash": "dot", "width": 2},
+        "anual_ma_12m": {"color": "#FF6B6B", "yaxis": "y2", "dash": "solid", "width": 3}
+    }
+    
+    # Add traces for selected series
     if not df_filtrado.empty:
-        fig.add_trace(go.Scatter(
-            x=df_filtrado["Mes"],
-            y=df_filtrado["CPI"],
-            mode="lines+markers",
-            name="General CPI",
-            yaxis="y1",
-            line=dict(color="#FFDE21")
-        ))
-        fig.add_trace(go.Scatter(
-            x=df_filtrado["Mes"],
-            y=df_filtrado["anual"],
-            mode="lines+markers",
-            name="Annual Change (%)",
-            yaxis="y2",
-            line=dict(color="#00FFFF", dash="dash")
-        ))
-        fig.add_trace(go.Scatter(
-            x=df_filtrado["Mes"],
-            y=df_filtrado["anual_ma_12m"],
-            mode="lines",
-            name="12-Month MA of Annual Change",
-            yaxis="y2",
-            line=dict(color="#FF6B6B", width=3)
-        ))
-        fig.add_trace(go.Scatter(
-        x=df_filtrado["Mes"],
-        y=df_filtrado["mensual"],
-        mode="lines+markers",
-        name="Monthly Change (%)",
-        yaxis="y2",  # lo ponemos en el eje derecho junto con la anual
-        line=dict(color="#FFA500", dash="dot")  # naranja punteado
-))
+        for serie in series_seleccionadas:
+            if serie in df_filtrado.columns:
+                style = series_styles.get(serie, {})
+                fig.add_trace(go.Scatter(
+                    x=df_filtrado["Mes"],
+                    y=df_filtrado[serie],
+                    mode="lines+markers",
+                    name=serie.replace("_", " ").title(),
+                    yaxis=style.get("yaxis", "y1"),
+                    line=dict(
+                        color=style.get("color", "#000000"),
+                        dash=style.get("dash", "solid"),
+                        width=style.get("width", 2)
+                    )
+                ))
+    
     fig.update_layout(
-    title=dict(
-        text="CPI, Annual Change, and 12-Month Moving Average",
+        title=dict(
+            text="CPI and Related Indicators",
+            font=dict(color="white"),
+            pad=dict(b=0)
+        ),
         font=dict(color="white"),
-        pad=dict(b=0)
-    ),
-    font=dict(color="white"),
-    height=350,
-    xaxis=dict(
-        title="Date",
-        color="white",
-        tickfont=dict(color="white")
-    ),
-    yaxis=dict(
-        title=dict(text="General Index (CPI)", font=dict(color="white")),
-        tickfont=dict(color="white"),
-        zeroline=True,           # habilita la línea en y=0
-        zerolinecolor="red",     # color de la línea cero
-        zerolinewidth=2          # grosor de la línea cero
-    ),
-    yaxis2=dict(
-        title=dict(text="Annual Change (%)", font=dict(color="white")),
-        tickfont=dict(color="white"),
-        overlaying="y",
-        side="right",
-        zeroline=True,           # opcional, si quieres que el 0 de y2 también tenga línea
-        zerolinecolor="red",
-        zerolinewidth=2
-    ),
-    legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
-    template="plotly_white",
-    plot_bgcolor="rgba(255, 255, 255, 0.1)",
-    paper_bgcolor="rgba(255, 255, 255, 0.1)"
-)
+        height=400,
+        xaxis=dict(
+            title="Date",
+            color="white",
+            tickfont=dict(color="white")
+        ),
+        yaxis=dict(
+            title=dict(text="General Index (CPI)", font=dict(color="white")),
+            tickfont=dict(color="white"),
+            zeroline=True,
+            zerolinecolor="red",
+            zerolinewidth=2
+        ),
+        yaxis2=dict(
+            title=dict(text="Percentage Change (%)", font=dict(color="white")),
+            tickfont=dict(color="white"),
+            overlaying="y",
+            side="right",
+            zeroline=True,
+            zerolinecolor="red",
+            zerolinewidth=2
+        ),
+        legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
+        template="plotly_white",
+        plot_bgcolor="rgba(255, 255, 255, 0.1)",
+        paper_bgcolor="rgba(255, 255, 255, 0.1)"
+    )
+    
     return fig
 
 # Callback to update cards on chart click
