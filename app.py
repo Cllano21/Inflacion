@@ -374,7 +374,7 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
             overlay_style["opacity"] = "1"
             content_style["transform"] = "translateX(250px)"
         else:
-            sidebar_style["left"] = "-250px"
+            sidebar_style["left"] = "-280px"
             overlay_style["opacity"] = "0"
             content_style["transform"] = "translateX(0)"
     
