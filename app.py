@@ -100,7 +100,7 @@ app.layout = html.Div(style={
         html.Div(id="sidebar", style={
             "position": "fixed",
             "top": "0",
-            "left": "-260px",  # Start off-screen
+            "left": "-280px",  # Start off-screen
             "height": "100vh",
             "width": "250px",
             "backgroundColor": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
