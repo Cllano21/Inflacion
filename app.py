@@ -97,19 +97,19 @@ app.layout = html.Div(style={
     }),
 
     # Sidebar with smooth transition
-    html.Div(id="sidebar", style={
-        "position": "fixed",
-        "top": "0",
-        "left": "-250px",  # Start off-screen
-        "height": "100vh",
-        "width": "250px",
-        "backgroundColor": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
-        "padding": "20px",
-        "zIndex": "1500",
-        "color": "white",
-        "transition": "left 0.3s ease",
-        "overflowY": "auto",
-        "boxShadow": "2px 0 5px rgba(0,0,0,0.2)"
+        html.Div(id="sidebar", style={
+            "position": "fixed",
+            "top": "0",
+            "left": "-260px",  # Start off-screen
+            "height": "100vh",
+            "width": "250px",
+            "backgroundColor": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
+            "padding": "20px",
+            "zIndex": "1500",
+            "color": "white",
+            "transition": "left 0.3s ease",
+            "overflowY": "auto",
+            "boxShadow": "2px 0 5px rgba(0,0,0,0.2)"
     }, children=[
         html.H3("Menu", style={"marginTop": "20px"}),
         html.Ul(style={"listStyleType": "none", "padding": "0"}, children=[
