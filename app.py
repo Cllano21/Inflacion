@@ -412,7 +412,7 @@ def actualizar_grafico(anios_seleccionados_dropdown, series_seleccionadas, n_cli
         button_id = ctx.triggered[0]["prop_id"].split(".")[0]
         
         if button_id == "card-2006-2016":
-            anios_a_mostrar = list(range(1969, 2025))
+            anios_a_mostrar = list(range(1969, 2026))
         elif button_id == "card-2017-2021":
             anios_a_mostrar = list(range(2017, 2022))
         elif button_id == "card-2022-2025":
