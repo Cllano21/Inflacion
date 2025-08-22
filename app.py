@@ -449,25 +449,41 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
         name="Monthly Change (%)",
         yaxis="y2",  # lo ponemos en el eje derecho junto con la anual
         line=dict(color="#FFA500", dash="dot")  # naranja punteado
-        ))
+))
     fig.update_layout(
-        title=dict(text="CPI, Annual Change, and 12-Month Moving Average", font=dict(color="white"), pad=dict(b=0)),
+    title=dict(
+        text="CPI, Annual Change, and 12-Month Moving Average",
         font=dict(color="white"),
-        height=350,
-        xaxis=dict(title="Date", color="white", tickfont=dict(color="white")),
-        yaxis=dict(title=dict(text="General Index (CPI)", font=dict(color="white")), tickfont=dict(color="white")),
-        yaxis2=dict(
-            title=dict(text="Annual Change (%)", font=dict(color="white")),
-            tickfont=dict(color="white"),
-            overlaying="y",
-            side="right"
-        ),
-        legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
-        template="plotly_white",
-        plot_bgcolor="rgba(255, 255, 255, 0.1)",
-        paper_bgcolor="rgba(255, 255, 255, 0.1)"
-    )
-    
+        pad=dict(b=0)
+    ),
+    font=dict(color="white"),
+    height=350,
+    xaxis=dict(
+        title="Date",
+        color="white",
+        tickfont=dict(color="white")
+    ),
+    yaxis=dict(
+        title=dict(text="General Index (CPI)", font=dict(color="white")),
+        tickfont=dict(color="white"),
+        zeroline=True,           # habilita la línea en y=0
+        zerolinecolor="red",     # color de la línea cero
+        zerolinewidth=2          # grosor de la línea cero
+    ),
+    yaxis2=dict(
+        title=dict(text="Annual Change (%)", font=dict(color="white")),
+        tickfont=dict(color="white"),
+        overlaying="y",
+        side="right",
+        zeroline=True,           # opcional, si quieres que el 0 de y2 también tenga línea
+        zerolinecolor="red",
+        zerolinewidth=2
+    ),
+    legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
+    template="plotly_white",
+    plot_bgcolor="rgba(255, 255, 255, 0.1)",
+    paper_bgcolor="rgba(255, 255, 255, 0.1)"
+)
     return fig
 
 # Callback to update cards on chart click
