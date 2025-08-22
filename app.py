@@ -27,6 +27,9 @@ df["anual"] = df["CPI"].div(df["CPI"].shift(12)).subtract(1).multiply(100)
 # Calculate 6-month moving average of annual change
 df["anual_ma_12m"] = df["anual"].rolling(window=12, min_periods=1).mean()
 
+# Inflación mensual en %
+df["mensual"] = df["CPI"].pct_change().multiply(100)
+
 # Last value
 ultimo_valor = df["CPI"].iloc[-1] if not df.empty else 0
 ultima_fecha = df["Mes"].iloc[-1].strftime("%b-%Y") if not df.empty else "N/A"
@@ -439,7 +442,14 @@ def actualizar_grafico(anios_seleccionados_dropdown, n_clicks_06_16, n_clicks_17
             yaxis="y2",
             line=dict(color="#FF6B6B", width=3)
         ))
-    
+        fig.add_trace(go.Scatter(
+        x=df_filtrado["Mes"],
+        y=df_filtrado["mensual"],
+        mode="lines+markers",
+        name="Monthly Change (%)",
+        yaxis="y2",  # lo ponemos en el eje derecho junto con la anual
+        line=dict(color="#FFA500", dash="dot")  # naranja punteado
+        ))
     fig.update_layout(
         title=dict(text="CPI, Annual Change, and 12-Month Moving Average", font=dict(color="white"), pad=dict(b=0)),
         font=dict(color="white"),
