@@ -2,6 +2,7 @@ import pandas as pd
 import dash
 from dash import dcc, html, Input, Output, State
 import plotly.graph_objects as go
+import plotly.express as px
 import os
 from datos_generados import datos
 from datetime import datetime
@@ -18,8 +19,10 @@ df["Mes"] = pd.to_datetime(df["Mes"], format="%Y-%m-%d %H:%M:%S", errors="coerce
 # Drop rows with invalid dates
 df = df.dropna(subset=['Mes'])
 
-# Extract the year
+# Extract the year and month
 df["Año"] = df["Mes"].dt.year
+df["Mes_Num"] = df["Mes"].dt.month
+df["Mes_Nombre"] = df["Mes"].dt.strftime("%B")
 
 # Calculate annual change
 df["anual"] = df["CPI"].div(df["CPI"].shift(12)).subtract(1).multiply(100)
@@ -97,19 +100,19 @@ app.layout = html.Div(style={
     }),
 
     # Sidebar with smooth transition
-        html.Div(id="sidebar", style={
-            "position": "fixed",
-            "top": "0",
-            "left": "-280px",  # Start off-screen
-            "height": "100vh",
-            "width": "250px",
-            "backgroundColor": "linear-gradient(to bottom right, #93c5fd, #1d4ed8, #0f172a)",
-            "padding": "20px",
-            "zIndex": "1500",
-            "color": "white",
-            "transition": "left 0.3s ease",
-            "overflowY": "auto",
-            "boxShadow": "2px 0 5px rgba(0,0,0,0.2)"
+    html.Div(id="sidebar", style={
+        "position": "fixed",
+        "top": "0",
+        "left": "-280px",  # Start off-screen
+        "height": "100vh",
+        "width": "250px",
+        "backgroundColor": "rgba(126, 146, 211, 0.9)",
+        "padding": "20px",
+        "zIndex": "1500",
+        "color": "white",
+        "transition": "left 0.3s ease",
+        "overflowY": "auto",
+        "boxShadow": "2px 0 5px rgba(0,0,0,0.2)"
     }, children=[
         html.H3("Menu", style={"marginTop": "20px"}),
         html.Ul(style={"listStyleType": "none", "padding": "0"}, children=[
@@ -252,7 +255,8 @@ app.layout = html.Div(style={
                 ])
             ])
         ]),
-        # 🔹 NEW YEAR RANGE SELECTION CARDS
+        
+        # 🔹 Year range selection cards
         html.Div(style={"display": "flex", "gap": "15px", "marginTop": "10px"}, children=[
             # Card 2006-2016
             html.Div(id="card-2006-2016", n_clicks=0, style={
@@ -310,7 +314,7 @@ app.layout = html.Div(style={
             ]),
         ]),
 
-        # 🔹 NEW: Series selector dropdown
+        # 🔹 Series selector dropdown
         html.Div(style={"display": "flex", "gap": "10px", "marginTop": "20px", "alignItems": "center"}, children=[
             html.Div(style={"width": "200px"}, children=[
                 html.H4("Select Year", style={"margin": "4px 0 2px 0", "color": "white"}),
@@ -339,10 +343,51 @@ app.layout = html.Div(style={
             ]),
         ]),
         
-        # 🔹 Chart
+        # 🔹 Main chart
         html.Div([
             dcc.Graph(id="grafico-lineas")
-        ], style={"width": "100%", "borderRadius": "12px", "overflow": "hidden", "height": "400px", "marginTop": "20px"})
+        ], style={"width": "100%", "borderRadius": "12px", "overflow": "hidden", "height": "400px", "marginTop": "20px"}),
+        
+        # 🔹 NEW: Month selector and monthly comparison chart
+        html.Div(style={"marginTop": "40px"}, children=[
+            html.H4("Monthly Comparison Across Years", style={"color": "white", "marginBottom": "10px"}),
+            html.Div(style={"display": "flex", "gap": "10px", "alignItems": "center"}, children=[
+                html.Div(style={"width": "300px"}, children=[
+                    dcc.Dropdown(
+                        id="month-selector",
+                        options=[
+                            {"label": "January", "value": 1},
+                            {"label": "February", "value": 2},
+                            {"label": "March", "value": 3},
+                            {"label": "April", "value": 4},
+                            {"label": "May", "value": 5},
+                            {"label": "June", "value": 6},
+                            {"label": "July", "value": 7},
+                            {"label": "August", "value": 8},
+                            {"label": "September", "value": 9},
+                            {"label": "October", "value": 10},
+                            {"label": "November", "value": 11},
+                            {"label": "December", "value": 12}
+                        ],
+                        multi=True,
+                        placeholder="Select months to compare..."
+                    )
+                ]),
+                html.Div(style={"width": "200px"}, children=[
+                    dcc.Dropdown(
+                        id="metric-selector",
+                        options=[
+                            {"label": "CPI", "value": "CPI"},
+                            {"label": "Annual Change", "value": "anual"},
+                            {"label": "Monthly Change", "value": "mensual"}
+                        ],
+                        value="CPI",
+                        placeholder="Select metric..."
+                    )
+                ])
+            ]),
+            dcc.Graph(id="grafico-mensual")
+        ])
     ])
 ])
 
@@ -370,7 +415,7 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
         # Toggle menu open
         if menu_clicks % 2 == 1:
             sidebar_style["left"] = "0"
-            overlay_style["display"]: "block"
+            overlay_style["display"] = "block"
             overlay_style["opacity"] = "1"
             content_style["transform"] = "translateX(250px)"
         else:
@@ -380,7 +425,7 @@ def toggle_menu(menu_clicks, close_clicks, overlay_clicks, sidebar_style, overla
     
     # If close button or overlay is clicked
     elif trigger_id in ["close-menu", "overlay"]:
-        sidebar_style["left"] = "-250px"
+        sidebar_style["left"] = "-280px"
         overlay_style["opacity"] = "0"
         content_style["transform"] = "translateX(0)"
         
@@ -494,6 +539,61 @@ def actualizar_grafico(anios_seleccionados_dropdown, series_seleccionadas, n_cli
             zerolinewidth=2
         ),
         legend=dict(font=dict(color="white"), x=0, y=1.1, orientation="h"),
+        template="plotly_white",
+        plot_bgcolor="rgba(255, 255, 255, 0.1)",
+        paper_bgcolor="rgba(255, 255, 255, 0.1)"
+    )
+    
+    return fig
+
+# New callback for monthly comparison chart
+@app.callback(
+    Output("grafico-mensual", "figure"),
+    [Input("month-selector", "value"),
+     Input("metric-selector", "value")]
+)
+def actualizar_grafico_mensual(meses_seleccionados, metrica):
+    if not meses_seleccionados or not metrica:
+        return go.Figure()
+    
+    # Filter data for selected months
+    df_filtrado = df[df["Mes_Num"].isin(meses_seleccionados)].copy()
+    
+    # Pivot the data to have years as index and months as columns
+    df_pivot = df_filtrado.pivot_table(
+        index="Año", 
+        columns="Mes_Nombre", 
+        values=metrica, 
+        aggfunc="mean"
+    ).reset_index()
+    
+    # Melt the dataframe for easier plotting
+    df_melted = df_pivot.melt(id_vars=["Año"], var_name="Mes", value_name="Valor")
+    
+    # Create the figure
+    fig = px.line(
+        df_melted, 
+        x="Año", 
+        y="Valor", 
+        color="Mes",
+        title=f"{metrica} Comparison by Month Across Years"
+    )
+    
+    # Update layout
+    fig.update_layout(
+        font=dict(color="white"),
+        height=400,
+        xaxis=dict(
+            title="Year",
+            color="white",
+            tickfont=dict(color="white")
+        ),
+        yaxis=dict(
+            title=metrica,
+            color="white",
+            tickfont=dict(color="white")
+        ),
+        legend=dict(font=dict(color="white")),
         template="plotly_white",
         plot_bgcolor="rgba(255, 255, 255, 0.1)",
         paper_bgcolor="rgba(255, 255, 255, 0.1)"
